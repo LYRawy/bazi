@@ -1,162 +1,67 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>命运罗盘 | 八字 x MBTI 深度解码</title>
-    <script src="https://cdn.jsdelivr.net/npm/lunar-javascript/lunar.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <style>
-        :root { --primary: #10b981; --bg: #0f172a; --card-bg: #1e293b; --text: #e2e8f0; }
-        body { font-family: 'PingFang SC', sans-serif; background: var(--bg); color: var(--text); padding: 20px; line-height: 1.6; }
-        .container { max-width: 700px; margin: 0 auto; }
-        
-        h1 { text-align: center; background: linear-gradient(to right, #34d399, #3b82f6); -webkit-background-clip: text; color: transparent; font-size: 2rem; margin-bottom: 10px; }
-        .subtitle { text-align: center; color: #94a3b8; font-size: 0.9em; margin-bottom: 30px; }
+// api/analyze.js
+export const config = {
+  runtime: 'edge', // 关键：开启 Edge 模式，突破 10 秒限制
+};
 
-        .card { background: var(--card-bg); border-radius: 16px; padding: 24px; margin-bottom: 24px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5); border: 1px solid #334155; }
-        
-        label { display: block; color: #94a3b8; font-size: 0.85rem; margin-bottom: 8px; margin-top: 15px; }
-        input, select { width: 100%; padding: 14px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; font-size: 16px; box-sizing: border-box; outline: none; }
-        input:focus, select:focus { border-color: var(--primary); }
+export default async function handler(req) {
+  // Edge 模式下，必须检查请求方法
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({ error: 'Method Not Allowed' }), {
+      status: 405,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
 
-        button { 
-            width: 100%; padding: 16px; margin-top: 25px;
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%); 
-            color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; 
-            box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.4);
-        }
-        button:disabled { opacity: 0.7; cursor: wait; }
+  try {
+    // 1. 读取前端发来的数据
+    const { birthDate, birthCity, mbti } = await req.json();
 
-        /* 排盘表格 */
-        .bazi-box { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; text-align: center; background: #0f172a; padding: 15px; border-radius: 8px; margin-top: 10px; }
-        .pillar-name { color: #64748b; font-size: 0.8rem; }
-        .gan-zhi { font-size: 1.1rem; font-weight: bold; color: #e2e8f0; }
-
-        /* AI 内容 */
-        .markdown-body { color: #cbd5e1; font-size: 1rem; line-height: 1.8; }
-        .markdown-body h3 { color: #34d399; margin-top: 25px; border-bottom: 1px solid #334155; padding-bottom: 8px; }
-        .markdown-body strong { color: #fbbf24; }
-        
-        .loading { text-align: center; color: #94a3b8; padding: 20px; display: none; }
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <h1>🔮 命运罗盘</h1>
-    <p class="subtitle">八字先天蓝图 × MBTI 后天人格</p>
-    
-    <div class="card">
-        <label>📅 出生日期 (公历/阳历)</label>
-        <input type="datetime-local" id="birthDate" value="2003-07-17T09:50">
-        
-        <label>📍 出生地点 (城市)</label>
-        <input type="text" id="birthCity" placeholder="例如：河南省郑州市 (用于真太阳时校正)" value="河南省郑州市">
-
-        <label>🧠 MBTI 人格类型</label>
-        <select id="mbti">
-            <optgroup label="守护者 (SJ)">
-                <option value="ISTJ">ISTJ - 物流师 (严谨负责)</option>
-                <option value="ISFJ">ISFJ - 守卫者 (温暖守护)</option>
-                <option value="ESTJ">ESTJ - 总经理 (高效执行)</option>
-                <option value="ESFJ">ESFJ - 执政官 (热情助人)</option>
-            </optgroup>
-            <optgroup label="探险家 (SP)">
-                <option value="ISTP">ISTP - 鉴赏家 (冷静理性)</option>
-                <option value="ISFP">ISFP - 探险家 (灵动艺术)</option>
-                <option value="ESTP">ESTP - 企业家 (活在当下)</option>
-                <option value="ESFP">ESFP - 表演者 (天生聚光)</option>
-            </optgroup>
-            <optgroup label="外交家 (NF)">
-                <option value="INFJ">INFJ - 提倡者 (深邃洞察)</option>
-                <option value="INFP" selected>INFP - 调停者 (治愈诗人)</option>
-                <option value="ENFJ">ENFJ - 主人公 (魅力领袖)</option>
-                <option value="ENFP">ENFP - 竞选者 (自由灵魂)</option>
-            </optgroup>
-            <optgroup label="分析家 (NT)">
-                <option value="INTJ">INTJ - 建筑师 (战略思维)</option>
-                <option value="INTP">INTP - 逻辑学家 (追求真理)</option>
-                <option value="ENTJ">ENTJ - 指挥官 (运筹帷幄)</option>
-                <option value="ENTP">ENTP - 辩论家 (智力挑战)</option>
-            </optgroup>
-        </select>
-
-        <button onclick="startAnalysis()" id="btn">🚀 开启天机解码</button>
-    </div>
-
-    <div id="result" class="card" style="display:none;">
-        <div style="margin-bottom: 20px;">
-            <div style="text-align:center; color:#94a3b8; font-size:0.9rem;">您的命盘结构</div>
-            <div class="bazi-box" id="baziChart"></div>
-        </div>
-        
-        <div id="loading" class="loading">
-            <p>☁️ 正在连接天机系统...</p>
-            <p>大师正在焚香推演，请耐心等待 10-20 秒...</p>
-        </div>
-
-        <div id="aiContent" class="markdown-body"></div>
-    </div>
-</div>
-
-<script>
-    async function startAnalysis() {
-        const dateStr = document.getElementById('birthDate').value;
-        const city = document.getElementById('birthCity').value;
-        const mbti = document.getElementById('mbti').value;
-
-        if(!dateStr || !city) return alert("请完整填写信息");
-
-        // 1. 本地排盘 (仅用于展示)
-        const d = new Date(dateStr);
-        const solar = Solar.fromYmdHms(d.getFullYear(), d.getMonth()+1, d.getDate(), d.getHours(), d.getMinutes(), 0);
-        const lunar = solar.getLunar();
-        const bazi = lunar.getBaZi();
-        
-        let html = '';
-        const pillars = ['年柱', '月柱', '日柱', '时柱'];
-        bazi.forEach((p, i) => {
-            html += `<div><div class="pillar-name">${pillars[i]}</div><div class="gan-zhi">${p}</div></div>`;
-        });
-        document.getElementById('baziChart').innerHTML = html;
-
-        // 2. 界面切换
-        document.getElementById('result').style.display = 'block';
-        document.getElementById('loading').style.display = 'block';
-        document.getElementById('aiContent').style.display = 'none';
-        document.getElementById('btn').disabled = true;
-        document.getElementById('btn').innerText = "⏳ 推演中...";
-
-        // 3. 请求我们自己的后端 (api/analyze)
-        try {
-            const res = await fetch('/api/analyze', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    birthDate: dateStr, 
-                    birthCity: city, 
-                    mbti: mbti 
-                })
-            });
-
-            const data = await res.json();
-            
-            if (data.error) throw new Error(data.error);
-
-            // 4. 显示 AI 结果
-            const text = data.choices[0].message.content;
-            document.getElementById('aiContent').innerHTML = marked.parse(text);
-            document.getElementById('aiContent').style.display = 'block';
-
-        } catch (e) {
-            alert("推演失败：" + e.message);
-        } finally {
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('btn').disabled = false;
-            document.getElementById('btn').innerText = "🚀 再次推演";
-        }
+    // 2. 检查 Key
+    const apiKey = process.env.DEEPSEEK_API_KEY;
+    if (!apiKey) {
+      return new Response(JSON.stringify({ error: '服务器配置错误：未找到 Key' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
-</script>
-</body>
-</html>
+
+    // 3. 向 DeepSeek 发送请求
+    const response = await fetch('https://api.deepseek.com/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        messages: [
+          { role: "system", content: "你是一位精通八字与MBTI的专家。" },
+          { role: "user", content: `用户${birthDate}出生在${birthCity}，MBTI是${mbti}。请给出性格分析，300字以内。` }
+        ],
+        max_tokens: 800 // 限制字数以加快速度
+      })
+    });
+
+    // 4. 检查 DeepSeek 是否报错
+    if (!response.ok) {
+      const errorText = await response.text();
+      return new Response(JSON.stringify({ error: `DeepSeek 报错: ${errorText}` }), {
+        status: response.status,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // 5. 返回结果
+    const data = await response.json();
+    return new Response(JSON.stringify(data), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+  } catch (error) {
+    return new Response(JSON.stringify({ error: `服务器错误: ${error.message}` }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
