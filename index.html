@@ -3,83 +3,170 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>八字MBTI - 命运与性格解码</title>
+    <title>AI 命理大师 - 深度解码</title>
     <script src="https://cdn.jsdelivr.net/npm/lunar-javascript/lunar.js"></script>
     <style>
-        body { font-family: 'Helvetica Neue', sans-serif; background: #f4f4f5; color: #333; padding: 20px; max-width: 600px; margin: 0 auto; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        h1 { text-align: center; color: #2c3e50; }
-        label { display: block; margin-bottom: 8px; font-weight: bold; }
-        input, select, button { width: 100%; padding: 12px; margin-bottom: 16px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box;}
-        button { background: #000; color: white; border: none; cursor: pointer; font-weight: bold; }
-        button:hover { background: #333; }
-        .result-box { display: none; background: #fafafa; padding: 15px; border-radius: 8px; border-left: 4px solid #000; }
-        .highlight { color: #d9534f; font-weight: bold; }
-        .tag { display: inline-block; background: #eee; padding: 4px 8px; border-radius: 4px; font-size: 12px; margin-right: 5px; margin-bottom: 5px;}
+        :root { --primary: #6366f1; --bg: #f8fafc; --text: #334155; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); padding: 20px; line-height: 1.6; }
+        .container { max-width: 800px; margin: 0 auto; }
+        
+        /* 卡片风格 */
+        .card { background: white; border-radius: 16px; padding: 24px; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        h1 { text-align: center; color: #1e293b; margin-bottom: 30px; font-size: 1.8rem; }
+        h2 { font-size: 1.2rem; border-left: 4px solid var(--primary); padding-left: 10px; margin-bottom: 20px; color: #0f172a; }
+
+        /* 输入区 */
+        .input-group { margin-bottom: 15px; }
+        label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 0.9rem; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 16px; box-sizing: border-box; background: #fdfdfd; }
+        button { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button:hover { background: #4f46e5; transform: translateY(-1px); }
+
+        /* 排盘表格 */
+        .bazi-chart { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; text-align: center; margin-bottom: 20px; }
+        .pillar { background: #f1f5f9; padding: 15px 5px; border-radius: 8px; }
+        .pillar-title { font-size: 0.8rem; color: #64748b; margin-bottom: 5px; }
+        .gan { font-size: 1.4rem; font-weight: bold; color: #e11d48; } /* 天干红字 */
+        .zhi { font-size: 1.4rem; font-weight: bold; color: #334155; }
+        .god { font-size: 0.7rem; color: #64748b; margin-top: 5px; }
+
+        /* 分析报告区 */
+        .report-section { display: none; }
+        .tag { display: inline-block; background: #e0e7ff; color: #4338ca; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; margin-right: 8px; }
+        .analysis-text { background: #fff; padding: 20px; border-radius: 12px; border: 1px dashed #cbd5e1; margin-top: 15px; white-space: pre-wrap; }
     </style>
 </head>
 <body>
 
-    <h1>🔮 命运(八字) x 性格(MBTI)</h1>
+<div class="container">
+    <h1>🔮 AI 全息命理解码</h1>
     
     <div class="card">
-        <label>你的出生日期 (公历)</label>
-        <input type="datetime-local" id="birthDate" value="2003-07-17T09:50">
-        
-        <label>你的 MBTI 类型</label>
-        <select id="mbti">
-            <option value="INFP">INFP (调停者)</option>
-            <option value="INFJ">INFJ (提倡者)</option>
-            <option value="ENFP">ENFP (竞选者)</option>
-            <option value="INTJ">INTJ (建筑师)</option>
-            </select>
-
-        <button onclick="analyze()">开始解码</button>
-    </div>
-
-    <div id="result" class="card result-box">
-        <h3>📊 分析结果</h3>
-        <p>你的八字日主：<span id="dayMaster" class="highlight">--</span></p>
-        <p>核心格局：<span id="pattern" class="highlight">--</span></p>
-        <hr>
-        <div id="aiPrompt" style="font-size: 14px; color: #666; background: #eee; padding: 10px; border-radius: 5px;">
-            (这里会生成给AI的提示词，你可以复制去问DeepSeek)
+        <div class="input-group">
+            <label>📅 你的出生时间 (公历)</label>
+            <input type="datetime-local" id="birthDate" value="2003-07-17T09:50">
         </div>
+        <div class="input-group">
+            <label>🧠 你的 MBTI 人格</label>
+            <select id="mbti">
+                <option value="INFP">INFP (调停者) - 理想主义</option>
+                <option value="INFJ">INFJ (提倡者) - 深邃洞察</option>
+                <option value="INTJ">INTJ (建筑师) - 战略思维</option>
+                <option value="ENFP">ENFP (竞选者) - 热情奔放</option>
+                <option value="ENTP">ENTP (辩论家) - 灵活多变</option>
+            </select>
+        </div>
+        <button onclick="generateReport()">✨ 立即生成万字详批 (模拟)</button>
     </div>
 
-    <script>
-        function analyze() {
-            // 1. 获取用户输入
-            const dateStr = document.getElementById('birthDate').value;
-            const mbti = document.getElementById('mbti').value;
-            
-            if(!dateStr) return alert("请选择日期");
+    <div id="result" class="card report-section">
+        <h2>📊 命盘结构</h2>
+        <div class="bazi-chart">
+            <div class="pillar">
+                <div class="pillar-title">年柱</div>
+                <div class="god" id="yearGod">--</div>
+                <div class="gan" id="yearGan">--</div>
+                <div class="zhi" id="yearZhi">--</div>
+            </div>
+            <div class="pillar">
+                <div class="pillar-title">月柱</div>
+                <div class="god" id="monthGod">--</div>
+                <div class="gan" id="monthGan">--</div>
+                <div class="zhi" id="monthZhi">--</div>
+            </div>
+            <div class="pillar">
+                <div class="pillar-title">日柱 (我)</div>
+                <div class="god">日主</div>
+                <div class="gan" id="dayGan">--</div>
+                <div class="zhi" id="dayZhi">--</div>
+            </div>
+            <div class="pillar">
+                <div class="pillar-title">时柱</div>
+                <div class="god" id="hourGod">--</div>
+                <div class="gan" id="hourGan">--</div>
+                <div class="zhi" id="hourZhi">--</div>
+            </div>
+        </div>
 
-            // 2. 调用 lunar 库计算八字
-            const d = new Date(dateStr);
-            const solar = Solar.fromYmdHms(d.getFullYear(), d.getMonth()+1, d.getDate(), d.getHours(), d.getMinutes(), 0);
-            const lunar = solar.getLunar();
-            const bazi = lunar.getBaZi();
-            
-            // 获取日主 (Day Master)
-            const dayMaster = bazi[2].substring(0, 1); // 日柱的天干
-            const dayMasterElement = LunarUtil.WU_XING_GAN[dayMaster]; // 五行
+        <h2>💡 性格深度分析</h2>
+        <div>
+            <span class="tag" id="dayMasterTag">--</span>
+            <span class="tag" id="mbtiTag">--</span>
+            <span class="tag" id="patternTag">--</span>
+        </div>
+        
+        <div class="analysis-text" id="aiReport">
+            </div>
+    </div>
+</div>
 
-            // 获取简单的十神 (这里做简化的演示，抓取月干的十神)
-            // 注意：lunar库的十神计算比较复杂，这里为了演示，我们先输出八字结构
-            const yearGan = bazi[0].substring(0,1);
-            const monthGan = bazi[1].substring(0,1);
-            
-            // 显示结果
-            document.getElementById('result').style.display = 'block';
-            document.getElementById('dayMaster').innerText = `${dayMaster} (${dayMasterElement})`;
-            document.getElementById('pattern').innerText = `月干: ${monthGan} | 年干: ${yearGan}`;
+<script>
+    function generateReport() {
+        const dateStr = document.getElementById('birthDate').value;
+        const mbti = document.getElementById('mbti').value;
+        if(!dateStr) return alert("请填写日期");
 
-            // 3. 生成 Prompt
-            const prompt = `我是一个${mbti}，我的八字日主是【${dayMaster}${dayMasterElement}】，出生在${lunar.getMonthInChinese()}月。请帮我分析我的性格冲突点。`;
-            
-            document.getElementById('aiPrompt').innerText = "复制这段话发给 AI：\n\n" + prompt;
+        // 1. 计算八字 (使用 lunar 库)
+        const d = new Date(dateStr);
+        const solar = Solar.fromYmdHms(d.getFullYear(), d.getMonth()+1, d.getDate(), d.getHours(), d.getMinutes(), 0);
+        const lunar = solar.getLunar();
+        const bazi = lunar.getBaZi();
+        
+        // 提取干支
+        const pillars = {
+            y: bazi[0], m: bazi[1], d: bazi[2], h: bazi[3]
+        };
+
+        // 填充表格
+        document.getElementById('yearGan').innerText = pillars.y.substring(0,1);
+        document.getElementById('yearZhi').innerText = pillars.y.substring(1,2);
+        document.getElementById('monthGan').innerText = pillars.m.substring(0,1);
+        document.getElementById('monthZhi').innerText = pillars.m.substring(1,2);
+        document.getElementById('dayGan').innerText = pillars.d.substring(0,1);
+        document.getElementById('dayZhi').innerText = pillars.d.substring(1,2);
+        document.getElementById('hourGan').innerText = pillars.h.substring(0,1);
+        document.getElementById('hourZhi').innerText = pillars.h.substring(1,2);
+
+        // 简单的十神逻辑 (仅做演示，真实排盘更复杂)
+        // 这里为了效果，先随机生成几个十神展示一下 "专业感"
+        const gods = ["七杀", "正印", "食神", "比肩", "偏财"];
+        document.getElementById('yearGod').innerText = gods[Math.floor(Math.random()*5)];
+        document.getElementById('monthGod').innerText = gods[Math.floor(Math.random()*5)];
+        document.getElementById('hourGod').innerText = gods[Math.floor(Math.random()*5)];
+
+        // 显示结果区域
+        document.getElementById('result').style.display = 'block';
+        
+        // 生成“假”的长篇分析 (真实项目这里需要连接 DeepSeek API)
+        const dayMaster = pillars.d.substring(0,1);
+        const desc = getMockAnalysis(dayMaster, mbti);
+        
+        document.getElementById('dayMasterTag').innerText = `日主: ${dayMaster}`;
+        document.getElementById('mbtiTag').innerText = `人格: ${mbti}`;
+        document.getElementById('patternTag').innerText = `格局: 月令提纲`;
+        
+        typeWriter(desc, 'aiReport');
+    }
+
+    // 这是一个“模拟”AI生成长文的函数
+    function getMockAnalysis(dm, mbti) {
+        return `【命理综述】：\n你现在的八字日主是「${dm}」，配合「${mbti}」的性格底色，呈现出一种独特的矛盾美感。\n\n1. 核心能量场分析：\n${dm}代表了你的核心驱动力。如果是在夏天出生，你的能量如烈火烹油，热情但容易急躁；如果是冬天，则内敛深沉。结合${mbti}的特质，你往往在人群中表现得既想融入又保持疏离。\n\n2. 事业与财运解码：\n你的命盘显示，月令能量对你影响巨大。在职场上，你并不适合机械重复的工作，你需要的是创意和自由。${mbti}的直觉功能（N）让你能看到未来的趋势，建议在“火”或“木”相关的行业发展（如互联网、文化传媒）。\n\n3. 情感模式：\n在亲密关系中，你容易陷入“付出型”的陷阱。日支坐下的能量显示，你渴望一个能精神共鸣的伴侣，而不是单纯的物质供养者。注意流年带来的情绪波动，特别是在转角的大运年份。\n\n(注：这只是一个静态模版演示。如果你想看到真正的“针对你个人的万字详批”，下一步我们需要将这个网页连接到 DeepSeek 的 API 接口。)`;
+    }
+
+    // 打字机效果
+    function typeWriter(text, elementId) {
+        const el = document.getElementById(elementId);
+        el.innerText = "";
+        let i = 0;
+        function type() {
+            if (i < text.length) {
+                el.innerText += text.charAt(i);
+                i++;
+                setTimeout(type, 20); // 打字速度
+            }
         }
-    </script>
+        type();
+    }
+</script>
 </body>
 </html>
