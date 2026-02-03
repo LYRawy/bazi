@@ -1,10 +1,10 @@
 // api/analyze.js
 export const config = {
-  runtime: 'edge', // 保持 Edge 模式，这是速度的关键
+  runtime: 'edge', // 速度保障
 };
 
 export default async function handler(req) {
-  // 1. 跨域处理 (保持不变)
+  // 1. 跨域设置
   if (req.method === 'OPTIONS') {
     return new Response(null, {
       status: 200,
@@ -34,7 +34,7 @@ export default async function handler(req) {
       });
     }
 
-    // 2. 呼叫 DeepSeek (深度大师版)
+    // 2. 呼叫 DeepSeek (治愈系深度版)
     const response = await fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',
       headers: {
@@ -46,21 +46,27 @@ export default async function handler(req) {
         messages: [
           { 
             role: 'system', 
-            content: '你是一位精通《三命通会》与荣格心理学的资深咨询师。你的风格是：一针见血、不讲客套话、直击灵魂深处的矛盾。拒绝泛泛而谈的巴纳姆效应，必须结合八字格局给出具体的痛点分析。' 
+            content: '你是一位温暖睿智的人生导师，精通八字命理与积极心理学。你的语言风格：优雅、深刻、充满力量与希望。你要挖掘求测者未被发现的潜能，将性格冲突解读为成长的契机。' 
           },
           { 
             role: 'user', 
-            content: `请深度剖析这位求测者：${birthDate}出生于${birthCity}，MBTI为${mbti}。
+            content: `请为这位求测者撰写一份“人生潜能挖掘报告”：${birthDate}生于${birthCity}，MBTI为${mbti}。
             
-            请从以下三个维度进行约 600 字的深度推演：
-            1. 【核心冲突】：结合八字日主与MBTI，揭露他内心最深层的纠结是什么？（如：表面的温和与内心的狂野）
-            2. 【情感宿命】：他在亲密关系中重复犯的错误模式是什么？
-            3. 【觉醒建议】：不要给鸡汤，给出一条虽然痛苦但能让他蜕变的具体建议。
+            请直接输出以下3个维度的深度解析（总字数控制在450字左右，确保精炼且不超时）：
             
-            要求：排版清晰，语气如老友夜谈，深刻且动人。` 
+            1. ✨【你的光芒所在】
+            结合八字日主与MBTI，指出他性格中最珍贵、最动人的特质是什么？（夸得具体、高级）
+            
+            2. ⚔️【被误解的弱点】
+            他通常认为自己的某个缺点（如敏感、固执等），在什么情况下其实是顶级的天赋？
+            
+            3. 🚀【给未来的信】
+            给出一段富有哲理的建议，告诉他如何在接下来的日子里活出更舒展的自己。
+            
+            注意：拒绝说教，拒绝负面预测，要让他读完觉得浑身充满力量。` 
           }
         ],
-        max_tokens: 1200, // 增加 Token 上限，允许它写长文
+        max_tokens: 650, 
         stream: false
       }),
     });
