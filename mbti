@@ -1,1 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>八字MBTI - 命运与性格解码</title>
+    <script src="https://cdn.jsdelivr.net/npm/lunar-javascript/lunar.js"></script>
+    <style>
+        body { font-family: 'Helvetica Neue', sans-serif; background: #f4f4f5; color: #333; padding: 20px; max-width: 600px; margin: 0 auto; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        h1 { text-align: center; color: #2c3e50; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; }
+        input, select, button { width: 100%; padding: 12px; margin-bottom: 16px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box;}
+        button { background: #000; color: white; border: none; cursor: pointer; font-weight: bold; }
+        button:hover { background: #333; }
+        .result-box { display: none; background: #fafafa; padding: 15px; border-radius: 8px; border-left: 4px solid #000; }
+        .highlight { color: #d9534f; font-weight: bold; }
+        .tag { display: inline-block; background: #eee; padding: 4px 8px; border-radius: 4px; font-size: 12px; margin-right: 5px; margin-bottom: 5px;}
+    </style>
+</head>
+<body>
 
+    <h1>🔮 命运(八字) x 性格(MBTI)</h1>
+    
+    <div class="card">
+        <label>你的出生日期 (公历)</label>
+        <input type="datetime-local" id="birthDate" value="2003-07-17T09:50">
+        
+        <label>你的 MBTI 类型</label>
+        <select id="mbti">
+            <option value="INFP">INFP (调停者)</option>
+            <option value="INFJ">INFJ (提倡者)</option>
+            <option value="ENFP">ENFP (竞选者)</option>
+            <option value="INTJ">INTJ (建筑师)</option>
+            </select>
+
+        <button onclick="analyze()">开始解码</button>
+    </div>
+
+    <div id="result" class="card result-box">
+        <h3>📊 分析结果</h3>
+        <p>你的八字日主：<span id="dayMaster" class="highlight">--</span></p>
+        <p>核心格局：<span id="pattern" class="highlight">--</span></p>
+        <hr>
+        <div id="aiPrompt" style="font-size: 14px; color: #666; background: #eee; padding: 10px; border-radius: 5px;">
+            (这里会生成给AI的提示词，你可以复制去问DeepSeek)
+        </div>
+    </div>
+
+    <script>
+        function analyze() {
+            // 1. 获取用户输入
+            const dateStr = document.getElementById('birthDate').value;
+            const mbti = document.getElementById('mbti').value;
+            
+            if(!dateStr) return alert("请选择日期");
+
+            // 2. 调用 lunar 库计算八字
+            const d = new Date(dateStr);
+            const solar = Solar.fromYmdHms(d.getFullYear(), d.getMonth()+1, d.getDate(), d.getHours(), d.getMinutes(), 0);
+            const lunar = solar.getLunar();
+            const bazi = lunar.getBaZi();
+            
+            // 获取日主 (Day Master)
+            const dayMaster = bazi[2].substring(0, 1); // 日柱的天干
+            const dayMasterElement = LunarUtil.WU_XING_GAN[dayMaster]; // 五行
+
+            // 获取简单的十神 (这里做简化的演示，抓取月干的十神)
+            // 注意：lunar库的十神计算比较复杂，这里为了演示，我们先输出八字结构
+            const yearGan = bazi[0].substring(0,1);
+            const monthGan = bazi[1].substring(0,1);
+            
+            // 显示结果
+            document.getElementById('result').style.display = 'block';
+            document.getElementById('dayMaster').innerText = `${dayMaster} (${dayMasterElement})`;
+            document.getElementById('pattern').innerText = `月干: ${monthGan} | 年干: ${yearGan}`;
+
+            // 3. 生成 Prompt
+            const prompt = `我是一个${mbti}，我的八字日主是【${dayMaster}${dayMasterElement}】，出生在${lunar.getMonthInChinese()}月。请帮我分析我的性格冲突点。`;
+            
+            document.getElementById('aiPrompt').innerText = "复制这段话发给 AI：\n\n" + prompt;
+        }
+    </script>
+</body>
+</html>
